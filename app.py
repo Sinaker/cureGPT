@@ -403,7 +403,7 @@ def login():
         user = user_collection.find_one({'email': email})
         if user and bcrypt.check_password_hash(user['password'], password):
             session['user_id'] = str(user['_id'])
-            session['user'] = str(user['username']);
+            session['user'] = str(user['username'])
             flash('Login successful!', 'success')
             return redirect('/index')  # Redirect to homepage
         else:
