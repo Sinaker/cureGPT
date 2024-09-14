@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
@@ -7,8 +7,10 @@ import google.generativeai as genai
 from joblib import load
 from dotenv import load_dotenv
 import os
+import json
 import zipfile
-
+import ulid
+import csv
 
 load_dotenv()
 
@@ -20,6 +22,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 zip_file = 'Model_Compressed.zip'
 extract_to = './data'
 os.makedirs(extract_to, exist_ok=True)
+# Generate a new ULID
+ulid_obj = ulid.new()
+session_id = ulid_obj.str
 
 with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
@@ -403,7 +408,7 @@ def login():
         user = user_collection.find_one({'email': email})
         if user and bcrypt.check_password_hash(user['password'], password):
             session['user_id'] = str(user['_id'])
-            session['user'] = str(user['username']);
+            session['user'] = str(user['username'])
             flash('Login successful!', 'success')
             return redirect('/index')  # Redirect to homepage
         else:
@@ -419,7 +424,6 @@ def signup():
         email = request.form.get('email')
         password = request.form.get('password')
         repassword = request.form.get('repassword')
-        print(username, email, password, repassword)
 
         # Basic validation
         if not (username and email and password and repassword):
@@ -454,16 +458,17 @@ def generate_full_prompt(user_input, context):
     full_prompt = f"{system_prompt}\n\nPatient: {user_input}\nAI:"
     return full_prompt
 
-def get_response(user_input, history):
-    full_prompt = generate_full_prompt(user_input, history)
+def get_response(user_input):
+    full_prompt = generate_full_prompt(user_input, [])
     
     response_obj = chat.send_message(full_prompt)
     response_text = response_obj.text  # Replace `.text` with the correct attribute or method
+    print(response_text)
     
-    history.append(f"Patient: {user_input}")
-    history.append(f"AI: {response_text}")
+    # history.append(f"Patient: {user_input}")
+    # history.append(f"AI: {response_text}")
 
-    return response_text, history
+    return response_text
 
 def get_predicted_value(patient_symptoms, model):
     input_vector = np.zeros(len(symptom_dict.keys()))
@@ -473,6 +478,27 @@ def get_predicted_value(patient_symptoms, model):
             input_vector[symptom_dict[cleaned_symptom]] = 1
     predicted_disease = model.predict([input_vector])[0]
     return predicted_disease
+
+import csv
+
+def append_to_csv(user_prompt, model_output, userID):
+    
+    # Ensure directory exists
+    os.makedirs("./data/users", exist_ok=True)
+
+    file_path = f"./data/users/{userID}.csv"
+
+    # Open the CSV file in append mode
+    with open(file_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        
+        # Write the header if the file is empty
+        file.seek(0, 2)  # Move to the end of the file
+        if file.tell() == 0:
+            writer.writerow(['Session ID', 'User Prompt', 'Model Output'])
+        
+        # Write the new row
+        writer.writerow([str(session_id), user_prompt, model_output])
 
 @app.route('/index')
 def index():
@@ -491,19 +517,29 @@ def index():
 @app.route('/predict',methods=['POST'])
 def predict():
     if 'user_id' not in session:
-        return redirect(url_for('login'))
-    # Get the form data
-    user_input = request.form.get('prompt')
-    response, updated_history = get_response(user_input, chat.history)
+        return redirect('./login')
 
-    response = response.split("\n")[0]
+    try:
+        userID = session['user_id']
+        user_input = request.form.get('prompt')
+        if not user_input:
+            return jsonify({'error': 'No input provided'}), 400
+        
+        response = get_response(user_input)
+
+        response = response.split("\n")[0]
+        userSymptoms = response.split(",")
+        
+        disease = get_predicted_value(userSymptoms, model)
+
+        output = "You may have " + disease
+        append_to_csv(user_input, output, userID)
+
+        # return f"You may have (a) {disease}"
+        return output
     
-    userSymptoms = response.split(",")
-    print(userSymptoms)
-    disease = get_predicted_value(userSymptoms,model)
-    # Return the response as plain text
-    # return jsonify({'disease': disease, 'ai_response': response})
-    return disease
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -402,3 +402,15 @@ li {
 .footer p{
   padding-bottom: 0;
 }
+.entry {
+    margin-bottom: 10px;
+}
+
+.input {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.output {
+    margin-left: 20px;
+}

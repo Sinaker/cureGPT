@@ -64,54 +64,51 @@
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Attach an event listener to the form
-        $("#promptForm").on("submit", function (event) {
-            event.preventDefault(); // Prevent the form from submitting the traditional way
-            
-            // Get the user input
-            let userInput = $("#prompt").val();
+       $("#promptForm").on("submit", function (event) {
+        event.preventDefault(); // Prevent the default form submission
 
-            // Send an AJAX request to the Flask server
-            $.ajax({
-                url: "/predict", // Flask route
-                type: "POST",
-                data: $(this).serialize(), // Send form data
-                success: function (response) {
-                    console.log(response);
-                    
-                    // Create a new div to hold the input and output
-                    let newEntry = document.createElement('div');
-                    newEntry.classList.add('entry');
+        // Get the user input
+        let userInput = $("#prompt").val();
 
-                    // Create an element for user input
-                    let inputDiv = document.createElement('div');
-                    inputDiv.classList.add('input');
-                    inputDiv.innerText = userInput;
+        // Send an AJAX request to the Flask server
+        $.ajax({
+            url: "/predict", // Flask route
+            type: "POST",
+            data: $(this).serialize(), // Send form data
+            success: function (response) {
+                // Create a new div to hold the input and output
+                let newEntry = document.createElement('div');
+                newEntry.classList.add('entry');
 
-                    // Create an element for the response
-                    let outputDiv = document.createElement('div');
-                    outputDiv.classList.add('output');
-                    outputDiv.innerText = response;
+                // Create an element for user input
+                let inputDiv = document.createElement('div');
+                inputDiv.classList.add('input');
+                inputDiv.innerText = `You: ${userInput}`;
 
-                    // Append input and output to the new entry
-                    newEntry.appendChild(inputDiv);
-                    newEntry.appendChild(outputDiv);
+                // Create an element for the response
+                let outputDiv = document.createElement('div');
+                outputDiv.classList.add('output');
+                outputDiv.innerText = `Response: ${response}`;
 
-                    // Append the new entry to the prediction div
-                    document.querySelector('.prediction').appendChild(newEntry);
+                // Append input and output to the new entry
+                newEntry.appendChild(inputDiv);
+                newEntry.appendChild(outputDiv);
 
-                    // Clear the form fields after a successful response
-                    $("#promptForm")[0].reset();
-                    $("input").blur();
-                },
-                error: function () {
-                    // Handle any errors here
-                    let errorDiv = document.createElement('div');
-                    errorDiv.innerText = "An error occurred while processing your request.";
-                    document.querySelector('.prediction').appendChild(errorDiv);
-                },
-            });
+                // Append the new entry to the prediction div
+                document.querySelector('.prediction').appendChild(newEntry);
+
+                // Clear the form fields after a successful response
+                $("#promptForm")[0].reset();
+                $("input").blur();
+            },
+            error: function () {
+                // Handle any errors here
+                let errorDiv = document.createElement('div');
+                errorDiv.innerText = "An error occurred while processing your request.";
+                document.querySelector('.prediction').appendChild(errorDiv);
+            },
         });
+    });
     </script>
     <script src="../static/script.js"></script>
 </body>
