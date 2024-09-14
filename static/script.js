@@ -57,3 +57,14 @@ submit.addEventListener('click', Enter);
 function Enter() {
     help.parentNode.removeChild(help);
 }
+const sidebar = document.getElementById("sidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const mainContent = document.getElementById("mainContent");
+const navbar = document.querySelector(".container");
+    // Handle sidebar toggle
+    sidebarToggle.addEventListener("click", function () {
+        sidebar.classList.toggle("active");
+        mainContent.classList.toggle("shifted");
+        navbar.classList.toggle("shifted"); // Shift the navbar as well
+    });
+

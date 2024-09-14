@@ -22,7 +22,8 @@ body {
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
-  transition: left 0.3s ease; /* Smooth slide-in animation */
+  transition: left 0.3s ease-in-out; /* Smooth slide-in animation */
+  z-index: 9999;
 }
 
 .sidebar.active {
@@ -32,10 +33,7 @@ body {
 .sidebar h2 {
   text-align: center;
   font-size: 24px;
-  color: #ffffff;
   margin-bottom: 20px;
-  border-bottom: 2px solid #333;
-  padding-bottom: 10px;
 }
 
 .sidebar ul {
@@ -49,7 +47,7 @@ body {
   padding: 10px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.5s ease-in-out;
 }
 
 .sidebar li:hover {
@@ -60,21 +58,24 @@ body {
 .sidebar-toggle {
   position: fixed;
   left: 10px;
-  top: 10px;
-  background-color: #444;
+  top: 32px;
+  background-color:transparent;
   color: white;
   padding: 10px;
   border: none;
   cursor: pointer;
   font-size: 24px;
-  z-index: 9999;
+  z-index: 10000;
 }
 
+#historyList{
+  padding: 15px;
+}
 /* Shift main content and navbar when sidebar is active */
 .container-main,
 .container,
 .footer {
-  transition: margin-left 0.3s ease;
+  transition: margin-left 1s ease-in-out;
 }
 
 .container-main.shifted,
@@ -151,7 +152,7 @@ div .navbar-left:hover {
 .caret-rotate {
   transform: rotate(180deg);
 }
-#authLink {}
+
 .menu {
   list-style: none;
   padding: 0.2em 0.5em;
