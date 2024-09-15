@@ -81,7 +81,8 @@
         </p>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
+<script>
+    $(document).ready(function () {
         // Attach an event listener to the form
         $("#promptForm").on("submit", function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
@@ -101,23 +102,24 @@
                     let newEntry = document.createElement('div');
                     newEntry.classList.add('entry');
 
-                // Create an element for user input
-                let inputDiv = document.createElement('div');
-                inputDiv.classList.add('input');
-                inputDiv.innerText = `You: ${userInput}`;
+                    // Create an element for user input
+                    let inputDiv = document.createElement('div');
+                    inputDiv.classList.add('input');
+                    inputDiv.innerText = `You: ${userInput}`;
 
-                // Create an element for the response
-                let outputDiv = document.createElement('div');
-                outputDiv.classList.add('output');
-                outputDiv.innerText = `Response: ${response}`;
+                    // Create an element for the response
+                    let outputDiv = document.createElement('div');
+                    outputDiv.classList.add('output');
+                    outputDiv.innerText = `Response: ${response}`;
 
-                // Append input and output to the new entry
-                newEntry.appendChild(inputDiv);
-                newEntry.appendChild(outputDiv);
+                    // Append input and output to the new entry
+                    newEntry.appendChild(inputDiv);
+                    newEntry.appendChild(outputDiv);
 
                     // Append the new entry to the prediction div
                     document.querySelector('.prediction').appendChild(newEntry);
                     addToHistory(userInput);
+
                     // Clear the form fields after a successful response
                     $("#promptForm")[0].reset();
                     $("input").blur();
@@ -129,27 +131,66 @@
                     document.querySelector('.prediction').appendChild(errorDiv);
                 },
             });
-            // Function to add a new entry to the history list
-            function addToHistory(userInput) {
-                const historyList = document.getElementById('historyList');
-
-                // Create a new list item element
-                const newListItem = document.createElement('li');
-
-                // Set the content of the list item to the user input
-                newListItem.innerText = userInput;
-
-                // Add a click event to the list item if you want to retrieve or alert the history
-                newListItem.addEventListener('click', function () {
-                    alert('You clicked: ' + userInput);
-                });
-
-                // Append the new list item to the history list
-                historyList.appendChild(newListItem);
-            }
-
         });
-    </script>
+
+        // Function to add a new entry to the history list
+        function addToHistory(userInput) {
+            const historyList = document.getElementById('historyList');
+
+            // Create a new list item element
+            const newListItem = document.createElement('li');
+            newListItem.innerText = userInput;
+
+            // Add a click event to the list item
+            newListItem.addEventListener('click', function () {
+                alert('You clicked: ' + userInput);
+            });
+
+            // Append the new list item to the history list
+            historyList.appendChild(newListItem);
+        }
+
+        // Fetch and populate the sidebar with user data
+        $.ajax({
+            url: '/get_user_data',
+            type: 'GET',
+            success: function (data) {
+                // data is assumed to be a list of entries
+                populateSidebar(data);
+            },
+            error: function () {
+                console.error('Failed to fetch user data');
+            }
+        });
+
+        function populateSidebar(entries) {
+            const sidebar = document.getElementById('historyList');
+            entries = entries[0]
+            sidebar.innerHTML = ''; // Clear existing entries
+
+            // Iterate over each entry in the data
+            entries.forEach(entry => {
+                // Create a list item for each entry
+                const listItem = document.createElement('li');
+                // Construct the text for the list item including the session ID and user prompt
+                listItem.innerText = `Date: ${entry[0]}`;
+                listItem.addEventListener('click', function () {
+                    alert('Clicked: ' + listItem.innerText);
+                });
+                sidebar.appendChild(listItem);
+            });
+        }
+
+        // Sidebar toggle button functionality
+        $('#sidebarToggle').on('click', function () {
+            $('.container').toggleClass('shifted');
+        });
+    });
+</script>
+
+
+
+
     <script src="../static/script.js"></script>
 </body>
 

@@ -11,6 +11,8 @@ import json
 import zipfile
 import ulid
 import csv
+from collections import defaultdict
+from datetime import datetime
 
 load_dotenv()
 
@@ -22,10 +24,8 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 zip_file = 'Model_Compressed.zip'
 extract_to = './data'
 os.makedirs(extract_to, exist_ok=True)
-# Generate a new ULID
-ulid_obj = ulid.new()
-session_id = ulid_obj.str
 
+session_id = None
 with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
 
@@ -47,7 +47,7 @@ db = client['dps']
 user_collection = db.dps_collection
 
 # Initialize Google Generative AI
-genai.configure(api_key='AIzaSyDoPUHYFXc54fj0VHuBSw07790EayzOCqE')
+genai.configure(api_key=GOOGLE_API_KEY)
 model_gem = genai.GenerativeModel("gemini-1.5-flash")
 chat = model_gem.start_chat(history=[])
 
@@ -401,6 +401,7 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global session_id
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -409,6 +410,9 @@ def login():
         if user and bcrypt.check_password_hash(user['password'], password):
             session['user_id'] = str(user['_id'])
             session['user'] = str(user['username'])
+            # Generate a new ULID
+            ulid_obj = ulid.new()
+            session_id = ulid_obj.str
             flash('Login successful!', 'success')
             return redirect('/index')  # Redirect to homepage
         else:
@@ -448,6 +452,7 @@ def signup():
 @app.route('/logout')
 @login_required
 def logout():
+    session=None
     logout_user()
     return redirect(url_for('login'))
 
@@ -495,10 +500,30 @@ def append_to_csv(user_prompt, model_output, userID):
         # Write the header if the file is empty
         file.seek(0, 2)  # Move to the end of the file
         if file.tell() == 0:
-            writer.writerow(['Session ID', 'User Prompt', 'Model Output'])
-        
+            writer.writerow(['Session ID', 'Date', 'User Prompt', 'Model Output'])
+        current_date = datetime.now().strftime('%Y-%m-%d')
         # Write the new row
-        writer.writerow([str(session_id), user_prompt, model_output])
+        writer.writerow([str(session_id), current_date, user_prompt, model_output])
+
+def group_entries_by_session(csv_file_path):
+    grouped_entries = defaultdict(list)
+    
+    with open(csv_file_path, mode='r') as file:
+        reader = csv.DictReader(file)
+        
+        for row in reader:
+            session_id = row['Session ID']
+            user_prompt = row['User Prompt']
+            model_output = row['Model Output']
+            date = row['Date']
+            
+            # Append the entry to the list for the corresponding session ID
+            grouped_entries[session_id].append([date, user_prompt, model_output])
+    
+    # Convert the grouped entries to a list of lists
+    grouped_list = list(grouped_entries.values())
+    
+    return grouped_list
 
 @app.route('/index')
 def index():
@@ -508,9 +533,7 @@ def index():
     # Fetch user details
     user_id = session['user_id']
     user_name = session['user']
-    print(user_id)
     user = user_collection.find_one({'_id': user_id})
-    print(user)
 
     return render_template('index.html', user_name=user_name)
 
@@ -541,5 +564,18 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/get_user_data', methods=['GET'])
+def get_user_data():
+    if 'user_id' in session:
+        user_id = session['user_id']
+        csv_file_path = f'./data/users/{user_id}.csv'
+        
+        # Group entries by session ID
+        grouped_entries = group_entries_by_session(csv_file_path)
+        
+        # Return the grouped entries as JSON
+        return jsonify(grouped_entries)
+    else:
+        return jsonify({"error": "User not logged in"}), 401
 if __name__ == "__main__":
     app.run(debug=True)
