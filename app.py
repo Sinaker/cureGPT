@@ -452,9 +452,9 @@ def signup():
 @app.route('/logout')
 @login_required
 def logout():
-    session=None
     logout_user()
-    return redirect(url_for('login'))
+    session.clear()
+    return redirect('/login')
 
 
 def generate_full_prompt(user_input, context):
@@ -527,6 +527,7 @@ def group_entries_by_session(csv_file_path):
 
 @app.route('/index')
 def index():
+    print(session)
     if 'user_id' not in session:
         return redirect('/login')
     
@@ -540,7 +541,7 @@ def index():
 @app.route('/predict',methods=['POST'])
 def predict():
     if 'user_id' not in session:
-        return redirect('./login')
+        return redirect('/login')
 
     try:
         userID = session['user_id']

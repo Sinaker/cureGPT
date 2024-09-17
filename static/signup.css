@@ -125,3 +125,25 @@ body {
     opacity: 1;
     transform: translateY(0);
 }
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    background-color: #f44336; /* Red background */
+    color: white; /* White text */
+    padding: 16px;
+    margin: 5px 0;
+    border-radius: 4px;
+    animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}

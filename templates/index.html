@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet" />
-        
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="../static/style.css" />
 </head>
 
@@ -71,8 +72,15 @@
     <div class="footer">
         <div class="prompt-input">
             <form action="/predict" method="POST" id="promptForm">
-                <input type="text" id="prompt" name="prompt" placeholder="Enter a prompt here" />
-                <button type="submit" class="submit">Submit</button>
+                <div class="message-container">
+                    <div class="attachment-icon">
+                        <i class="fas fa-paperclip"></i>
+                    </div>
+                    <input type="text" placeholder="Message DPS" id="prompt" name="prompt">
+                    <button type="submit" class="submit">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -83,109 +91,154 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        // Attach an event listener to the form
-        $("#promptForm").on("submit", function (event) {
-            event.preventDefault(); // Prevent the form from submitting the traditional way
+    const promptInput = document.getElementById('prompt');
+    const submitButton = document.querySelector('.submit');
+    const arrow = document.querySelector(".submit i ");
 
-            // Get the user input
-            let userInput = $("#prompt").val();
-
-            // Send an AJAX request to the Flask server
-            $.ajax({
-                url: "/predict", // Flask route
-                type: "POST",
-                data: $(this).serialize(), // Send form data
-                success: function (response) {
-                    console.log(response);
-
-                    // Create a new div to hold the input and output
-                    let newEntry = document.createElement('div');
-                    newEntry.classList.add('entry');
-
-                    // Create an element for user input
-                    let inputDiv = document.createElement('div');
-                    inputDiv.classList.add('input');
-                    inputDiv.innerText = `You: ${userInput}`;
-
-                    // Create an element for the response
-                    let outputDiv = document.createElement('div');
-                    outputDiv.classList.add('output');
-                    outputDiv.innerText = `Response: ${response}`;
-
-                    // Append input and output to the new entry
-                    newEntry.appendChild(inputDiv);
-                    newEntry.appendChild(outputDiv);
-
-                    // Append the new entry to the prediction div
-                    document.querySelector('.prediction').appendChild(newEntry);
-                    addToHistory(userInput);
-
-                    // Clear the form fields after a successful response
-                    $("#promptForm")[0].reset();
-                    $("input").blur();
-                },
-                error: function () {
-                    // Handle any errors here
-                    let errorDiv = document.createElement('div');
-                    errorDiv.innerText = "An error occurred while processing your request.";
-                    document.querySelector('.prediction').appendChild(errorDiv);
-                },
-            });
-        });
-
-        // Function to add a new entry to the history list
-        function addToHistory(userInput) {
-            const historyList = document.getElementById('historyList');
-
-            // Create a new list item element
-            const newListItem = document.createElement('li');
-            newListItem.innerText = userInput;
-
-            // Add a click event to the list item
-            newListItem.addEventListener('click', function () {
-                alert('You clicked: ' + userInput);
-            });
-
-            // Append the new list item to the history list
-            historyList.appendChild(newListItem);
+    promptInput.addEventListener('input', function () {
+        if (promptInput.value.trim() !== "") {
+            submitButton.disabled = false;
+            submitButton.style.backgroundColor = "#090909";
+            submitButton.style.cursor = "pointer";
+        } else {
+            submitButton.disabled = true;
+            submitButton.style.backgroundColor = "#555";
+            submitButton.style.cursor = "";
         }
+    });
 
-        // Fetch and populate the sidebar with user data
+    $("#promptForm").on("submit", function (event) {
+        event.preventDefault();
+
+        let userInput = $("#prompt").val();
+
+        $.ajax({
+            url: "/predict",
+            type: "POST",
+            data: $(this).serialize(),
+            success: function (response) {
+                console.log(response);
+
+                let newEntry = document.createElement('div');
+                newEntry.classList.add('entry');
+
+                let inputDiv = document.createElement('div');
+                inputDiv.classList.add('input');
+                inputDiv.innerText = `You: ${userInput}`;
+
+                let outputDiv = document.createElement('div');
+                outputDiv.classList.add('output');
+                outputDiv.innerText = `Response: ${response}`;
+
+                newEntry.appendChild(inputDiv);
+                newEntry.appendChild(outputDiv);
+
+                document.querySelector('.prediction').appendChild(newEntry);
+                addToHistory(userInput);
+
+                $("#promptForm")[0].reset();
+                $("input").blur();
+
+                updateSidebar();
+            },
+            error: function () {
+                let errorDiv = document.createElement('div');
+                errorDiv.innerText = "An error occurred while processing your request.";
+                document.querySelector('.prediction').appendChild(errorDiv);
+            },
+        });
+    });
+
+    function addToHistory(userInput) {
+        const historyList = document.getElementById('historyList');
+        const newListItem = document.createElement('li');
+        newListItem.innerText = userInput;
+        historyList.appendChild(newListItem);
+    }
+
+    function updateSidebar() {
         $.ajax({
             url: '/get_user_data',
             type: 'GET',
             success: function (data) {
-                // data is assumed to be a list of entries
-                populateSidebar(data);
+                populateSidebar(data.reverse());
             },
             error: function () {
                 console.error('Failed to fetch user data');
             }
         });
+    }
 
-        function populateSidebar(entries) {
-            const sidebar = document.getElementById('historyList');
-            entries = entries[0]
-            sidebar.innerHTML = ''; // Clear existing entries
+    function populateSidebar(entries) {
+        const sidebar = document.getElementById('historyList');
+        sidebar.innerHTML = '';
 
-            // Iterate over each entry in the data
-            entries.forEach(entry => {
-                // Create a list item for each entry
-                const listItem = document.createElement('li');
-                // Construct the text for the list item including the session ID and user prompt
-                listItem.innerText = `Date: ${entry[0]}`;
-                listItem.addEventListener('click', function () {
-                    alert('Clicked: ' + listItem.innerText);
-                });
-                sidebar.appendChild(listItem);
-            });
+        entries.forEach(entry => {
+            console.log(entry);
+            const listItem = document.createElement('li');
+            listItem.innerText = `Date: ${entry[0][0]} \n Conversations: ${entry.length}`;
+            listItem.addEventListener('click', () => restoreHistory(entry));
+            sidebar.appendChild(listItem);
+        });
+    }
+    function restoreHistory(entries) {
+        const main_container = document.querySelector('.container-main');
+
+        if (main_container) {
+            main_container.remove();
+
+            // Adding prediction div after sidebar
+            const sidebar = document.querySelector('.sidebar');
+
+            // Create the prediction div
+            const predictionDiv = document.createElement('div');
+            predictionDiv.id = 'prediction';
+
+            // Insert the prediction div after the sidebar
+            sidebar.parentNode.insertBefore(predictionDiv, sidebar.nextSibling);
+        } else {
+            // Clear all children of the prediction div
+            const predictionDiv = document.getElementById('prediction'); // Use id instead of class
+            if (predictionDiv) {
+                predictionDiv.innerHTML = "";
+            }
         }
 
-        // Sidebar toggle button functionality
-        $('#sidebarToggle').on('click', function () {
-            $('.container').toggleClass('shifted');
-        });
+        // Get the prediction div (ensure it's created or cleared)
+        const predictionDiv = document.getElementById('prediction');
+
+        // Loop through entries and create entry divs
+        for (let entry of entries) {
+            // Create the entry div
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'entry';
+
+            // Create the input div
+            const inputDiv = document.createElement('div');
+            inputDiv.className = 'input';
+            inputDiv.textContent = entry[1]; // Set textContent for input div
+
+            // Create the output div
+            const outputDiv = document.createElement('div');
+            outputDiv.className = 'output';
+            outputDiv.textContent = entry[2]; // Set textContent for output div
+
+            // Append input and output divs to entry div
+            entryDiv.appendChild(inputDiv);
+            entryDiv.appendChild(outputDiv);
+
+            // Append entry div to prediction div
+            predictionDiv.appendChild(entryDiv);
+        }
+    }
+
+    $('#sidebarToggle').on('click', function () {
+        $('.container').toggleClass('shifted');
     });
+
+    updateSidebar();
+});
+
 </script>
 
 
