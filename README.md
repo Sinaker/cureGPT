@@ -95,7 +95,7 @@ The application should now be running and accessible at `http://localhost`.
 
 ### Signup Page:
 
-![image](https://github.com/user-attachments/assets/7a68be3f-620a-4941-90f9-42f581d9915b)
+![image](https://github.com/user-attachments/assets/52a33f5d-7dc4-4b4c-8901-457770100195)
 
 
 
