@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Sign In</title>
+    <title>Sign In | DRISHTI-DPS</title>
     <link rel="stylesheet" href="../static/signup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -15,65 +16,84 @@
         <!-- Sign in form -->
         <section class="sign-in">
             <div class="container">
-                <div class="signin-content">
-                    <div class="signin-form">
-                        <h3 class="form-title">Sign In</h3>
-                        <!-- Error message display -->
-                        {% if error %}
-                        <div class="error-message">{{ error }}</div>
+                <div class="signin-image">
+                    <div class="brand-wrapper">
+                        <h1 class="brand-title">DRISHTI-DPS</h1>
+                        <p class="brand-subtitle">Digital Patient Diagnostic System</p>
+                    </div>
+                </div>
+                <div class="signin-form">
+                    <h2 class="form-title">Welcome Back</h2>
+                    
+                    <!-- Flash messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="{% if category == 'error' %}error-message{% else %}success-message{% endif %}">
+                                    <i class="{% if category == 'error' %}fas fa-exclamation-circle{% else %}fas fa-check-circle{% endif %}"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
                         {% endif %}
-                        <!-- Success message display -->
-                        {% if success %}
-                        <div class="success-message">{{ success }}</div>
-                        {% endif %}
-                        <form action="/login" method="POST" class="register-form" id="login-form">
-                            <div class="form-group">
-                                <label for="email"><i class="zmdi zmdi-account material-icons-name"></i></label>
-                                <input type="email" name="email" id="email" placeholder="Email" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="pass"><i class="zmdi zmdi-lock"></i></label>
-                                <input type="password" name="password" id="pass" placeholder="Password" required />
-                            </div>
-                            <div class="form-group" id="remember-me">
-                                <input type="checkbox" name="remember-me" id="remember-me" class="agree-term" />
-                                <label for="remember-me" class="label-agree-term">Remember me</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="submit" name="signin" id="signin" class="form-submit" value="Log in" />
-                            </div>
-                        </form>
-                        <div class="social-login">
-                            <a href="/signup" class="signup-image-link">Create an account</a>
+                    {% endwith %}
+                    
+                    <form action="/login" method="POST" class="register-form" id="login-form">
+                        <div class="form-group">
+                            <input type="email" name="email" id="email" placeholder="Email Address" required />
+                            <i class="fas fa-envelope"></i>
                         </div>
+                        <div class="form-group">
+                            <input type="password" name="password" id="pass" placeholder="Password" required />
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="form-group" id="remember-me">
+                            <input type="checkbox" name="remember-me" id="remember-me" class="agree-term" />
+                            <label for="remember-me" class="label-agree-term">Remember me</label>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" name="signin" id="signin" class="form-submit">
+                                Sign In <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="social-login">
+                        <span>Don't have an account? </span>
+                        <a href="/signup" class="signup-image-link">Create an account</a>
                     </div>
                 </div>
             </div>
         </section>
     </div>
 
-    <style>
-        .error-message {
-            color: red;
-            font-size: 0.875em;
-            margin-top: 10px;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+    <script>
+        // Function to display flash messages as toasts
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'error' ? 'exclamation-circle' : 'check-circle';
+            toast.innerHTML = `<i class="fas fa-${icon}"></i>${message}`;
+            
+            const container = document.getElementById('toastContainer');
+            container.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         }
-
-        .error-message.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .success-message {
-            color: green;
-            font-size: 0.875em;
-            margin-top: 10px;
-        }
-    </style>
-
+        
+        // Handle form submission with validation
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('pass').value;
+            
+            if (!email || !password) {
+                event.preventDefault();
+                showToast('Please fill in all fields', 'error');
+            }
+        });
+    </script>
 </body>
 
 </html>

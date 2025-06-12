@@ -449,4 +449,71 @@ li {
 .output {
     margin-left: 20px;
 }
+/* Add at the end of your existing CSS */
 
+/* Loader Styles */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.loader-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.loader:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid rgba(203, 80, 192, 0.2);
+  border-top-color: #cb50c0;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-text {
+  color: white;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Error message styles */
+.error-message {
+  background-color: rgba(255, 0, 0, 0.2);
+  border-left: 4px solid #ff0033;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  color: white;
+  text-align: center;
+}

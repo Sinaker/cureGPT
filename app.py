@@ -149,22 +149,26 @@ def create_app(config_name='default'):
         return predicted_disease
 
     def append_to_csv(user_prompt, model_output, userID):
-        # Ensure directory exists
-        os.makedirs("./data/users", exist_ok=True)
+        try :
+            # Ensure directory exists
+            os.makedirs("./data/users", exist_ok=True)
 
-        file_path = f"./data/users/{userID}.csv"
+            file_path = f"./data/users/{userID}.csv"
 
-        # Open the CSV file in append mode
-        with open(file_path, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            
-            # Write the header if the file is empty
-            file.seek(0, 2)  # Move to the end of the file
-            if file.tell() == 0:
-                writer.writerow(['Session ID', 'Date', 'User Prompt', 'Model Output'])
-            current_date = datetime.now().strftime('%Y-%m-%d')
-            # Write the new row
-            writer.writerow([str(session_id), current_date, user_prompt, model_output])
+            # Open the CSV file in append mode
+            with open(file_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                
+                # Write the header if the file is empty
+                file.seek(0, 2)  # Move to the end of the file
+                if file.tell() == 0:
+                    writer.writerow(['Session ID', 'Date', 'User Prompt', 'Model Output'])
+                current_date = datetime.now().strftime('%Y-%m-%d')
+                # Write the new row
+                writer.writerow([str(session_id), current_date, user_prompt, model_output])
+            app.logger.info(f'Appended entry for user {userID} to {file_path}')
+        except Exception as e:
+            app.logger.error(f'Error appending to CSV: {str(e)}')
 
     def group_entries_by_session(csv_file_path):
         grouped_entries = defaultdict(list)
@@ -191,9 +195,15 @@ def create_app(config_name='default'):
 
     # Define routes
     @app.route('/')
-    @login_required
     def home():
-        return render_template('index.html')
+        if 'user_id' not in session:
+            return redirect('/login')
+        
+        # Fetch user details
+        user_id = session['user_id']
+        user_name = session['user']
+
+        return render_template('index.html', user_name=user_name)
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -210,7 +220,7 @@ def create_app(config_name='default'):
                 session_id = str(ULID())
                 login_user(User(str(user['_id'])))
                 flash('Login successful!', 'success')
-                return redirect('/index')  # Redirect to homepage
+                return redirect('/')  # Redirect to homepage
             else:
                 flash('Incorrect email or password', 'error')
 
@@ -256,16 +266,6 @@ def create_app(config_name='default'):
         session.clear()
         return redirect('/login')
         
-    @app.route('/index')
-    def index():
-        if 'user_id' not in session:
-            return redirect('/login')
-        
-        # Fetch user details
-        user_id = session['user_id']
-        user_name = session['user']
-
-        return render_template('index.html', user_name=user_name)
 
     @app.route('/predict', methods=['POST'])
     def predict():

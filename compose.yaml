@@ -1,11 +1,10 @@
+name: cure-gpt
 services:
   mongodb:
     image: mongo:latest
     restart: always
     env_file:
       - mongo.env
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db # Persistent storage for MongoDB
     networks:
@@ -15,7 +14,7 @@ services:
     # Replace with your actual application image
     build:
       context: .
-      dockerfile: Dockerfile  
+      dockerfile: Dockerfile_app
 
     restart: always 
     depends_on:
@@ -24,10 +23,25 @@ services:
       - app.env
       # Connection string for your application
     volumes:
+      - users_data:/curegpt/data/users  # Persistent storage for user data
       - ./app.py:/curegpt/app.py  # Adjust path as needed
       - ./config.py:/curegpt/config.py  # Adjust path as needed
+      - ./templates:/curegpt/templates
+      - ./static:/curegpt/static
     ports:
       - "8080:8080"  # Adjust port as needed
+    networks:
+      - app-network
+
+  nginx: 
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Adjust path as needed
+    ports:
+      - "80:80"  # Expose port 80 for HTTP traffic
+    depends_on:
+      - app
     networks:
       - app-network
 
@@ -37,3 +51,4 @@ networks:
 
 volumes:
   mongodb_data:
+  users_data:
