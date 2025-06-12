@@ -25,10 +25,71 @@ In this project, we develop a machine learning model to classify diseases based 
 - **Prescription Generation**: Provides a list of medications and treatment plans tailored to the diagnosed disease. _(tentative)_
 - **Simple Interface**: A simple web interface will be used to allow easy and controlled interaction with the model.
 - **User Login**: User login along with chat history is also provided.
+- **Docker Scalability**: Containerized deployment with Docker, including NGINX for load balancing and MongoDB containers for efficient data storage and scaling.
 
 ## Installation
 
-To properly ensure that the project runs properly, clone the repository and contact me for the secret api keys, contact details are given below. Use commands like `npm start` after ensuring all packages have been installed.
+There are two ways to set up and run the Doctor Prescription Service:
+
+### Manual Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/Sinaker/cureGPT.git
+    cd cureGPT
+    ```
+
+2. Install the required dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Create the necessary environment files:
+    
+    Create a file named `app.env` with the following content:
+    ```
+    GOOGLE_API_KEY=google_key
+    SECRET_KEY=your_secret_key_here
+    DB_USERNAME=root
+    DB_PASSWORD=example
+    ```
+
+4. Run the Flask application:
+    ```
+    python app.py
+    ```
+5. The application should now be running and accessible at `http://localhost:8080`.
+
+### Docker Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/Doctor-Prescription-Service.git
+    cd Doctor-Prescription-Service
+    ```
+
+2. Create the necessary environment files:
+    
+    Create a file named `app.env` with the following content:
+    ```
+    GOOGLE_API_KEY=google_key
+    SECRET_KEY=your_secret_key
+    DB_USERNAME=root
+    DB_PASSWORD=example
+    ```
+    
+    Create a file named `mongo.env` with the following content:
+    ```
+    MONGO_INITDB_ROOT_USERNAME=root
+    MONGO_INITDB_ROOT_PASSWORD=example
+    ```
+
+3. Run with Docker Compose:
+    ```bash
+    docker-compose up
+    ```
+
+The application should now be running and accessible at `http://localhost`.
 
 ## Preview
 
