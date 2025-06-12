@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    image: mongo:latest
+    restart: always
+    env_file:
+      - mongo.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db # Persistent storage for MongoDB
+    networks:
+      - app-network
+
+  app:
+    # Replace with your actual application image
+    build:
+      context: .
+      dockerfile: Dockerfile  
+
+    restart: always 
+    depends_on:
+      - mongodb
+    env_file:
+      - app.env
+      # Connection string for your application
+    volumes:
+      - ./app.py:/curegpt/app.py  # Adjust path as needed
+      - ./config.py:/curegpt/config.py  # Adjust path as needed
+    ports:
+      - "8080:8080"  # Adjust port as needed
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
